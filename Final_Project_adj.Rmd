@@ -1,0 +1,401 @@
+---
+title: "Final Project"
+theme: cerulean
+output:
+  html_document: default
+  html_notebook: default
+  pdf_document: default
+---
+<style type="text/css">
+
+body{ /* Normal  */
+      font-size: 18px;
+      font-family: "Times New Roman", Times, serif;
+      color: Black;
+  }
+td {  /* Table  */
+  font-size: 10px;
+}
+h1.title {
+  font-size: 38px;
+  color: DarkRed;
+}
+h1 { /* Header 1 */
+  font-size: 20px;
+  font-family: "Times New Roman", Times, serif;
+  color: DarkBlue;
+}
+h2 { /* Header 2 */
+  font-size: 18px;
+  font-family: "Times New Roman", Times, serif;
+  color: DarkBlue;
+}
+code.r{ /* Code block */
+    font-size: 18px;
+}
+pre { /* Code block - determines code spacing between lines */
+    font-size: 18px;
+}
+</style>
+
+
+# Manipulating Training Set
+
+```{r}
+df_training <- read.csv("C:/Users/Matthew Byun/Desktop/School/FNCE-3490/Assignment/Final Project/Kaggle_Training_Dataset_v2.csv")
+```
+
+```{r}
+library(dplyr)
+```
+
+```{r}
+head(df_training)
+```
+
+```{r}
+summary(df_training)
+```
+
+```{r}
+## Delete one unnecessary row at the end of the dataset
+df_training <- df_training[-1687861,]
+```
+
+```{r}
+nrow(df_training)
+```
+
+```{r}
+df_training <- na.omit(df_training)
+```
+
+```{r}
+summary(df_training)
+```
+
+```{r}
+nrow(df_training)
+```
+
+# Removing a irrelevant column of sku
+```{r}
+df_training <- df_training %>% dplyr::select(., -sku)
+```
+
+# Removing outliers
+```{r}
+boxplot(df_training$perf_6_month_avg, horizontal = TRUE)
+```
+
+```{r}
+boxplot(df_training$perf_12_month_avg, horizontal = TRUE)
+```
+
+```{r}
+df_training <- df_training %>% dplyr::filter(df_training$perf_6_month_avg != -99, df_training$perf_12_month_avg != -99)
+```
+
+```{r}
+boxplot(df_training$perf_6_month_avg, horizontal = TRUE)
+```
+
+```{r}
+boxplot(df_training$perf_12_month_avg, horizontal = TRUE)
+```
+
+# Investigating data patterns
+```{r}
+summary(df_training)
+```
+
+```{r}
+hist(df_training$national_inv)
+hist(df_training$lead_time)
+hist(df_training$in_transit_qty)
+hist(df_training$forecast_3_month)
+hist(df_training$forecast_6_month)
+hist(df_training$forecast_9_month)
+hist(df_training$sales_1_month)
+hist(df_training$sales_3_month)
+hist(df_training$sales_6_month)
+hist(df_training$sales_9_month)
+hist(df_training$min_bank)
+hist(df_training$local_bo_qty)
+```
+- We found the data above are right-skewed data
+
+```{r}
+hist(df_training$perf_6_month_avg)
+hist(df_training$perf_12_month_avg)
+```
+- We found the data above are left-skewed data
+
+# Scaling and adjusting biased data
+```{r}
+df_training$national_inv <- scale(df_training$national_inv)
+```
+
+```{r}
+hist(df_training$national_inv)
+```
+
+```{r}
+##Using Cube root transformation for right-skewed data
+df_training$lead_time <- sign(df_training$lead_time) * abs(df_training$lead_time)^(1/3)
+df_training$in_transit_qty <- sign(df_training$in_transit_qty) * abs(df_training$in_transit_qty)^(1/3)
+df_training$forecast_3_month <- sign(df_training$forecast_3_month) * abs(df_training$forecast_3_month)^(1/3)
+df_training$forecast_6_month <- sign(df_training$forecast_6_month) * abs(df_training$forecast_6_month)^(1/3)
+df_training$forecast_9_month <- sign(df_training$forecast_9_month) * abs(df_training$forecast_9_month)^(1/3)
+df_training$sales_1_month <- sign(df_training$sales_1_month) * abs(df_training$sales_1_month)^(1/3)
+df_training$sales_3_month <- sign(df_training$sales_3_month) * abs(df_training$sales_3_month)^(1/3)
+df_training$sales_6_month <- sign(df_training$sales_6_month) * abs(df_training$sales_6_month)^(1/3)
+df_training$sales_9_month <- sign(df_training$sales_9_month) * abs(df_training$sales_9_month)^(1/3)
+df_training$min_bank <- sign(df_training$min_bank) * abs(df_training$min_bank)^(1/3)
+df_training$local_bo_qty <- sign(df_training$local_bo_qty) * abs(df_training$local_bo_qty)^(1/3)
+```
+
+```{r}
+hist(df_training$lead_time)
+hist(df_training$in_transit_qty)
+hist(df_training$forecast_3_month)
+hist(df_training$forecast_6_month)
+hist(df_training$forecast_9_month)
+hist(df_training$sales_1_month)
+hist(df_training$sales_3_month)
+hist(df_training$sales_6_month)
+hist(df_training$sales_9_month)
+hist(df_training$min_bank)
+hist(df_training$local_bo_qty)
+```
+
+```{r}
+##Using Cube root transformation for left-skewed data
+df_training$perf_6_month_avg <- sign(1-df_training$perf_6_month_avg) * abs(1-df_training$perf_6_month_avg)^(1/3)
+df_training$perf_12_month_avg <- sign(1-df_training$perf_12_month_avg) * abs(1-df_training$perf_12_month_avg)^(1/3)
+```
+
+```{r}
+hist(df_training$perf_6_month_avg)
+hist(df_training$perf_12_month_avg)
+```
+
+# Checking levels
+```{r}
+levels(df_training$potential_issue)
+```
+- We found an unnecesssary level in training dataset
+
+```{r}
+## Droping the unnecessary level
+df_training$potential_issue <- droplevels(df_training$potential_issue)
+levels(df_training$potential_issue)
+```
+
+```{r}
+## Changing the levels of "No," "Yes" to "0," "1"
+levels(df_training$potential_issue)[1] <- 0
+levels(df_training$potential_issue)[2] <- 1
+levels(df_training$potential_issue)
+```
+
+```{r}
+df_training$deck_risk <- droplevels(df_training$deck_risk)
+df_training$oe_constraint <- droplevels(df_training$oe_constraint)
+df_training$ppap_risk <- droplevels(df_training$ppap_risk)
+df_training$stop_auto_buy <- droplevels(df_training$stop_auto_buy)
+df_training$rev_stop <- droplevels(df_training$rev_stop)
+df_training$went_on_backorder <- droplevels(df_training$went_on_backorder)
+```
+
+```{r}
+levels(df_training$deck_risk)[1] <- 0 
+levels(df_training$deck_risk)[2] <- 1
+levels(df_training$oe_constraint)[1] <- 0
+levels(df_training$oe_constraint)[2] <- 1
+levels(df_training$ppap_risk)[1] <- 0
+levels(df_training$ppap_risk)[2] <- 1
+levels(df_training$stop_auto_buy)[1] <- 0
+levels(df_training$stop_auto_buy)[2] <- 1
+levels(df_training$rev_stop)[1] <- 0
+levels(df_training$rev_stop)[2] <- 1
+levels(df_training$went_on_backorder)[1] <- 0
+levels(df_training$went_on_backorder)[2] <- 1
+```
+
+# Test for multicollinearity
+
+```{r}
+library(usdm)
+```
+
+```{r}
+## Using VIF to eliminate multicollinearity
+usdm::vif(df_training)
+```
+
+```{r}
+## Removing columns having too high VIF
+df_training <- df_training %>% dplyr::select(., -forecast_6_month, -forecast_9_month, -sales_3_month, -sales_6_month, -sales_9_month)
+```
+
+# Manipulating Test Set
+
+- We went through the same process used above
+```{r}
+df_test <- read.csv("C:/Users/Matthew Byun/Desktop/School/FNCE-3490/Assignment/Final Project/Kaggle_Test_Dataset_v2.csv")
+```
+
+```{r}
+df_test <- na.omit(df_test)
+```
+
+```{r}
+df_test <- df_test %>% dplyr::select(., -sku)
+```
+
+```{r}
+df_test <- df_test %>% dplyr::filter(df_test$perf_6_month_avg != -99, df_test$perf_12_month_avg != -99)
+```
+
+```{r}
+df_test$national_inv <- scale(df_test$national_inv)
+```
+
+```{r}
+##Cube root transformation
+df_test$lead_time <- sign(df_test$lead_time) * abs(df_test$lead_time)^(1/3)
+df_test$in_transit_qty <- sign(df_test$in_transit_qty) * abs(df_test$in_transit_qty)^(1/3)
+df_test$forecast_3_month <- sign(df_test$forecast_3_month) * abs(df_test$forecast_3_month)^(1/3)
+df_test$forecast_6_month <- sign(df_test$forecast_6_month) * abs(df_test$forecast_6_month)^(1/3)
+df_test$forecast_9_month <- sign(df_test$forecast_9_month) * abs(df_test$forecast_9_month)^(1/3)
+df_test$sales_1_month <- sign(df_test$sales_1_month) * abs(df_test$sales_1_month)^(1/3)
+df_test$sales_3_month <- sign(df_test$sales_3_month) * abs(df_test$sales_3_month)^(1/3)
+df_test$sales_6_month <- sign(df_test$sales_6_month) * abs(df_test$sales_6_month)^(1/3)
+df_test$sales_9_month <- sign(df_test$sales_9_month) * abs(df_test$sales_9_month)^(1/3)
+df_test$min_bank <- sign(df_test$min_bank) * abs(df_test$min_bank)^(1/3)
+df_test$local_bo_qty <- sign(df_test$local_bo_qty) * abs(df_test$local_bo_qty)^(1/3)
+df_test$perf_6_month_avg <- sign(1-df_test$perf_6_month_avg) * abs(1-df_test$perf_6_month_avg)^(1/3)
+df_test$perf_12_month_avg <- sign(1-df_test$perf_12_month_avg) * abs(1-df_test$perf_12_month_avg)^(1/3)
+```
+
+```{r}
+levels(df_test$potential_issue)
+```
+
+```{r}
+levels(df_test$potential_issue)[1] <- 0
+levels(df_test$potential_issue)[2] <- 1
+levels(df_test$deck_risk)[1] <- 0 
+levels(df_test$deck_risk)[2] <- 1
+levels(df_test$oe_constraint)[1] <- 0
+levels(df_test$oe_constraint)[2] <- 1
+levels(df_test$ppap_risk)[1] <- 0
+levels(df_test$ppap_risk)[2] <- 1
+levels(df_test$stop_auto_buy)[1] <- 0
+levels(df_test$stop_auto_buy)[2] <- 1
+levels(df_test$rev_stop)[1] <- 0
+levels(df_test$rev_stop)[2] <- 1
+levels(df_test$went_on_backorder)[1] <- 0
+levels(df_test$went_on_backorder)[2] <- 1
+```
+
+```{r}
+df_test <- df_test %>% dplyr::select(., -forecast_6_month, -forecast_9_month, -sales_3_month, -sales_6_month, -sales_9_month)
+```
+
+# Modeling 
+
+- Multiple Logistic Regression
+
+```{r}
+m.lr <- glm(went_on_backorder ~ ., data = df_training, family = binomial(link = "logit"))
+summary(m.lr)
+```
+
+- Naive Bayes
+
+```{r}
+library(e1071)
+m.nb <- naiveBayes(went_on_backorder ~ ., data = df_training)
+m.nb
+```
+
+```{r}
+library(caret)
+confusionMatrix(predict(m.nb, df_training[ , 1:16]), df_training[ , 17])
+```
+
+```{r}
+preds.nb <- predict(m.nb, df_test)
+```
+
+```{r}
+summary(preds.nb)
+```
+
+```{r}
+confusionMatrix(preds.nb, df_test$went_on_backorder)
+```
+
+```{r}
+library(pROC)
+roc.nb <- roc(df_test$went_on_backorder, preds.nb)
+plot(roc.nb, xlab ="False Positive Rate", ylab ="True Positive Rate", print.auc = TRUE)
+```
+
+For ROC, naive Bayes model does not give numeric values as outcomes, so we could not draw ROC.
+
+- LDA
+
+```{r}
+library(MASS)
+m.lda <- lda(went_on_backorder ~ ., data = df_training)
+m.lda
+```
+
+```{r}
+preds.lda <- predict(m.lda, df_test)
+confusionMatrix(preds.lda$class, df_test$went_on_backorder)
+```
+
+```{r}
+summary(preds.lda)
+```
+
+```{r}
+roc.lda <- roc(df_test$went_on_backorder, preds.lda$posterior[, 1])
+plot(roc.lda, xlab ="False Positive Rate", ylab ="True Positive Rate", print.auc = TRUE)
+```
+
+- QDA
+
+```{r}
+m.qda <- qda(went_on_backorder ~ ., data = df_training)
+m.qda
+```
+Error messege appears because train set includes some factor variables, which are not appropriate for QDA.
+
+```{r}
+head(df_training)
+```
+
+Thus, I dropped factor variables and then run QDA model again.
+
+```{r}
+m.qda <- qda(went_on_backorder ~ . -potential_issue -deck_risk -oe_constraint -ppap_risk -stop_auto_buy -rev_stop, data = df_training)
+m.qda
+```
+
+```{r}
+preds.qda <- predict(m.qda, df_test)
+confusionMatrix(preds.qda$class, df_test$went_on_backorder)
+```
+
+```{r}
+roc.qda <- roc(df_test$went_on_backorder, preds.qda$posterior[, 1])
+plot(roc.qda, xlab ="False Positive Rate", ylab ="True Positive Rate", print.auc = TRUE)
+```
+
+Overall, LDA model seems the best with the highest accuracy of 0.9842 and the AUC of 0.828.
+For QDA, it has the accuracy of 0.8992 and the AUC of 0.815 while naive Bayes has the accuracy of 0.8762.
